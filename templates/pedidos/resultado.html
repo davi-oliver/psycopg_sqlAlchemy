@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado do Pedido</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        {% if success %}
+        <div class="alert success">
+            <h1>Sucesso!</h1>
+            <p>{{ message }}</p>
+            {% if order_id %}
+            <p>Número do Pedido: <strong>{{ order_id }}</strong></p>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="alert error">
+            <h1>Erro!</h1>
+            <p>{{ message }}</p>
+        </div>
+        {% endif %}
+        
+        <a href="{{ url_for('novo_pedido') }}" class="button">Novo Pedido</a>
+    </div>
+</body>
+</html>
