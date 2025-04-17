@@ -4,6 +4,8 @@ from psycopg2 import sql
 class PedidoDAO:
     def __init__(self, conexao):
         self.con = conexao
+
+        
     
     # Versão INSEGURA (para demonstração)
     def inserir_pedido_inseguro(self, customer_name, employee_name, order_data, order_items):
@@ -89,6 +91,14 @@ class PedidoDAO:
                 )
             
             self.con.commit()
+                        # Verificação imediata
+          
+            cursor.execute("SELECT 1 FROM northwind.orders WHERE orderid = %s", (order_id,))
+            if not cursor.fetchone():
+                raise Exception("Pedido não persistido após commit!")
+            
+            # return True, f"Pedido {order_id} criado com sucesso!", order_id
+
             return order_id
             
         except Exception as e:

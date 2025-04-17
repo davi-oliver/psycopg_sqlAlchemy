@@ -111,3 +111,32 @@ button:hover {
 .button:hover {
     background-color: #286090;
 }
+
+/* Adicione ao seu arquivo CSS existente */
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 16px;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.item-pedido {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}

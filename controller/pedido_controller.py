@@ -3,6 +3,7 @@ from model.dao.pedidodao import PedidoDAO
 class PedidoController:
     def __init__(self, conexao_db):
         self.dao = PedidoDAO(conexao_db)
+        
     
     def criar_pedido(self, form_data, seguro=True):
         try:
