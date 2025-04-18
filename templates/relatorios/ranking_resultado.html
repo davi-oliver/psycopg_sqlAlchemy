@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Ranking de Funcionários</h2>
+    <p>Período: {{ data_inicio }} até {{ data_fim }}</p>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Funcionário</th>
+                <th>Total de Pedidos</th>
+                <th>Total Vendido</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for func in ranking %}
+            <tr>
+                <td>{{ func[0] }}</td>
+                <td>{{ func[1] }}</td>
+                <td>{{ "R$ %.2f"|format(func[2]) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Relatório de Pedido</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="order_id" class="form-label">Número do Pedido</label>
+            <input type="number" class="form-control" id="order_id" name="order_id" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Gerar Relatório</button>
+    </form>
+</div>
+{% endblock %}

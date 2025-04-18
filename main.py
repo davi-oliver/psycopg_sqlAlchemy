@@ -27,7 +27,81 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return redirect(url_for('novo_pedido'))
+    return render_template('base.html')
+
+@app.route('/relatorios/pedido', methods=['GET', 'POST'])
+def relatorio_pedido():
+    if request.method == 'POST':
+        order_id = request.form.get('order_id')
+        conn = get_db_connection()
+        try:
+            # Obter informações do pedido
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT o.orderid, o.orderdate, c.contactname, 
+                       CONCAT(e.firstname, ' ', e.lastname) as employeename
+                FROM northwind.orders o
+                JOIN northwind.customers c ON o.customerid = c.customerid
+                JOIN northwind.employees e ON o.employeeid = e.employeeid
+                WHERE o.orderid = %s
+            """, (order_id,))
+            pedido = cursor.fetchone()
+
+            # Obter itens do pedido
+            cursor.execute("""
+                SELECT p.productname, od.quantity, od.unitprice
+                FROM northwind.order_details od
+                JOIN northwind.products p ON od.productid = p.productid
+                WHERE od.orderid = %s
+            """, (order_id,))
+            itens = cursor.fetchall()
+
+            return render_template('relatorios/pedido_resultado.html',
+                                pedido=pedido,
+                                itens=itens)
+        except Exception as e:
+            return render_template('relatorios/erro.html',
+                                message=f"Erro ao gerar relatório: {str(e)}")
+        finally:
+            conn.close()
+    
+    return render_template('relatorios/pedido_form.html')
+
+
+@app.route('/relatorios/ranking', methods=['GET', 'POST'])
+def ranking_funcionarios():
+    if request.method == 'POST':
+        data_inicio = request.form.get('data_inicio')
+        data_fim = request.form.get('data_fim')
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 
+                    CONCAT(e.firstname, ' ', e.lastname) as employeename,
+                    COUNT(o.orderid) as total_pedidos,
+                    SUM(od.unitprice * od.quantity * (1 - od.discount)) as total_vendido
+                FROM northwind.employees e
+                JOIN northwind.orders o ON e.employeeid = o.employeeid
+                JOIN northwind.order_details od ON o.orderid = od.orderid
+                WHERE o.orderdate BETWEEN %s AND %s
+                GROUP BY e.employeeid, employeename
+                ORDER BY total_vendido DESC
+            """, (data_inicio, data_fim))
+            
+            ranking = cursor.fetchall()
+            
+            return render_template('relatorios/ranking_resultado.html',
+                                ranking=ranking,
+                                data_inicio=data_inicio,
+                                data_fim=data_fim)
+        except Exception as e:
+            return render_template('relatorios/erro.html',
+                                message=f"Erro ao gerar ranking: {str(e)}")
+        finally:
+            conn.close()
+    
+    return render_template('relatorios/ranking_form.html')
 
 @app.route('/pedidos/novo', methods=['GET', 'POST'])
 def novo_pedido():

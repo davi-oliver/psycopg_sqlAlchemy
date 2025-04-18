@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Relatório do Pedido #{{ pedido[0] }}</h2>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Informações do Pedido</h5>
+            <p><strong>Data:</strong> {{ pedido[1] }}</p>
+            <p><strong>Cliente:</strong> {{ pedido[2] }}</p>
+            <p><strong>Vendedor:</strong> {{ pedido[3] }}</p>
+        </div>
+    </div>
+    
+    <h4>Itens do Pedido</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Preço Unitário</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in itens %}
+            <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>{{ "R$ %.2f"|format(item[2]) }}</td>
+                <td>{{ "R$ %.2f"|format(item[1] * item[2]) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
