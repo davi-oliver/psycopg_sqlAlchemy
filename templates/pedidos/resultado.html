@@ -10,7 +10,7 @@
     <div class="container">
         {% if success %}
         <div class="alert success">
-            <h1>Sucesso!</h1>
+            <h1>✅ Pedido Criado com Sucesso!</h1>
             <p>{{ message }}</p>
             {% if order_id %}
             <p>Número do Pedido: <strong>{{ order_id }}</strong></p>
@@ -18,12 +18,17 @@
         </div>
         {% else %}
         <div class="alert error">
-            <h1>Erro!</h1>
+            <h1>❌ Erro ao Criar Pedido</h1>
             <p>{{ message }}</p>
         </div>
         {% endif %}
+
+        <br />
         
-        <a href="{{ url_for('novo_pedido') }}" class="button">Novo Pedido</a>
+        <div class="actions">
+            <a href="{{ url_for('novo_pedido') }}" class="btn-primary">Criar Novo Pedido</a>
+            
+        </div>
     </div>
 </body>
 </html>

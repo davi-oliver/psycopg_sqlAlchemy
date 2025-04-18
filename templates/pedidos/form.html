@@ -10,98 +10,255 @@
     <div class="container">
         <h1>Novo Pedido</h1>
         
-        <form method="POST" action="{{ url_for('novo_pedido') }}">
-            <h2>Dados Básicos</h2>
-            
-            <div class="form-group">
-                <label for="customer_name">Nome do Cliente:</label>
-                <input type="text" id="customer_name" name="customer_name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="employee_name">Nome do Vendedor:</label>
-                <input type="text" id="employee_name" name="employee_name" required>
-            </div>
-            
-            <h2>Dados do Pedido</h2>
-            
-            <div class="form-group">
-                <label for="orderdate">Data do Pedido:</label>
-                <input type="date" id="orderdate" name="orderdate" value="2023-11-20" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="requireddate">Data Requerida:</label>
-                <input type="date" id="requireddate" name="requireddate" value="2023-11-25" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="shipname">Nome de Envio:</label>
-                <input type="text" id="shipname" name="shipname" value="Endereço de Teste" required>
-            </div>
-            
-            <h2>Itens do Pedido</h2>
-            
-            <div id="itens-container">
-                <!-- Itens serão adicionados aqui via JavaScript -->
-                <div class="item-pedido">
+        <form method="POST" action="{{ url_for('novo_pedido') }}" id="pedidoForm">
+            <div class="form-section">
+                <h2>Dados do Cliente e Vendedor</h2>
+                
+                <div class="form-row">
                     <div class="form-group">
-                        <label>Produto ID:</label>
-                        <input type="number" name="item_0_productid" required>
+                        <label for="customerid">Cliente *</label>
+                        <select id="customerid" name="customerid" required>
+                            <option value="">Selecione um cliente...</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente[0] }}">{{ cliente[1] }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
+                    
                     <div class="form-group">
-                        <label>Preço Unitário:</label>
-                        <input type="number" step="0.01" name="item_0_unitprice" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Quantidade:</label>
-                        <input type="number" name="item_0_quantity" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Desconto:</label>
-                        <input type="number" step="0.01" name="item_0_discount" value="0.0" required>
+                        <label for="employeeid">Vendedor *</label>
+                        <select id="employeeid" name="employeeid" required>
+                            <option value="">Selecione um vendedor...</option>
+                            {% for vendedor in vendedores %}
+                            <option value="{{ vendedor[0] }}">{{ vendedor[1] }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
             </div>
-            
-            <button type="button" id="adicionar-item">Adicionar Item</button>
-            
-            <div class="form-group checkbox">
-                <input type="checkbox" id="modo_seguro" name="modo_seguro" checked>
-                <label for="modo_seguro">Modo Seguro (SQL Injection Protection)</label>
+
+            <div class="form-section">
+                <h2>Datas do Pedido</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="orderdate">Data do Pedido *</label>
+                        <input type="date" id="orderdate" name="orderdate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="requireddate">Data Requerida *</label>
+                        <input type="date" id="requireddate" name="requireddate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shippeddate">Data de Envio</label>
+                        <input type="date" id="shippeddate" name="shippeddate">
+                    </div>
+                </div>
             </div>
-            
-            <button type="submit">Enviar Pedido</button>
+
+            <div class="form-section">
+                <h2>Informações de Envio</h2>
+                
+                <div class="form-group">
+                    <label for="shipname">Nome para Entrega *</label>
+                    <input type="text" id="shipname" name="shipname" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shipaddress">Endereço *</label>
+                        <input type="text" id="shipaddress" name="shipaddress" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shipcity">Cidade *</label>
+                        <input type="text" id="shipcity" name="shipcity" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shipregion">Região/Estado</label>
+                        <input type="text" id="shipregion" name="shipregion">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shippostalcode">CEP *</label>
+                        <input type="text" id="shippostalcode" name="shippostalcode" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shipcountry">País *</label>
+                        <input type="text" id="shipcountry" name="shipcountry" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="freight">Frete</label>
+                    <input type="number" step="0.01" id="freight" name="freight" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="shipperid">Transportadora</label>
+                    <select id="shipperid" name="shipperid">
+                        <option value="">Selecione uma transportadora...</option>
+                        {% for shipper in shippers %}
+                        <option value="{{ shipper[0] }}">{{ shipper[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Itens do Pedido</h2>
+                <div id="itens-container">
+                    <div class="item-pedido">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label  for="item_0_productid">Produto *</label>
+                                <select class="produto-select" name="item_0_productid" id="item_0_productid" required>
+                                    <option value="">Selecione um produto...</option>
+                                    {% for produto in produtos %}
+                                    <option value="{{ produto[0] }}" 
+                                            data-preco="{{ produto[2] }}"
+                                            data-nome="{{ produto[1] }}">
+                                        {{ produto[1] }} (R$ {{ "%.2f"|format(produto[2]) }})
+                                    </option>
+                                    {% else %}
+                                    <option value="">Nenhum produto disponível</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Preço Unitário *</label>
+                                <input type="number" step="0.01" class="unitprice" name="item_0_unitprice" readonly required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantidade *</label>
+                                <input type="number" class="quantity" name="item_0_quantity" min="1" value="1" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Desconto</label>
+                                <input type="number" step="0.01" class="discount" name="item_0_discount" min="0" max="1" value="0.0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" id="adicionar-item" class="btn-secondary">+ Adicionar Item</button>
+            </div>
+
+            <div class="form-actions">
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="usar_orm" name="usar_orm" {% if usar_orm %}checked{% endif %}>
+                    <label for="usar_orm">Usar SQLAlchemy ORM</label>
+                </div>
+                
+                <button type="submit" class="btn-primary">Enviar Pedido</button>
+            </div>
         </form>
     </div>
 
     <script>
-        let itemCount = 1;
-        
-        document.getElementById('adicionar-item').addEventListener('click', function() {
-            const container = document.getElementById('itens-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'item-pedido';
-            newItem.innerHTML = `
-                <div class="form-group">
-                    <label>Produto ID:</label>
-                    <input type="number" name="item_${itemCount}_productid" required>
-                </div>
-                <div class="form-group">
-                    <label>Preço Unitário:</label>
-                    <input type="number" step="0.01" name="item_${itemCount}_unitprice" required>
-                </div>
-                <div class="form-group">
-                    <label>Quantidade:</label>
-                    <input type="number" name="item_${itemCount}_quantity" required>
-                </div>
-                <div class="form-group">
-                    <label>Desconto:</label>
-                    <input type="number" step="0.01" name="item_${itemCount}_discount" value="0.0" required>
-                </div>
-            `;
-            container.appendChild(newItem);
-            itemCount++;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default for order date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('orderdate').value = today;
+            
+            // Set required date to 7 days from today
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            document.getElementById('requireddate').value = nextWeek.toISOString().split('T')[0];
+            
+            // Add product selection handler
+            function setupProductSelect(selectElement) {
+                const unitPriceInput = selectElement.closest('.item-pedido').querySelector('.unitprice');
+                
+                selectElement.addEventListener('change', function() {
+                    if (this.value) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const preco = selectedOption.getAttribute('data-preco');
+                        unitPriceInput.value = parseFloat(preco).toFixed(2);
+                    } else {
+                        unitPriceInput.value = '';
+                    }
+                });
+            }
+            
+            // Setup initial product selects
+            document.querySelectorAll('.produto-select').forEach(setupProductSelect);
+            
+            // Add new item
+            let itemCount = 1;
+            document.getElementById('adicionar-item').addEventListener('click', function() {
+                const container = document.getElementById('itens-container');
+                const newItem = document.createElement('div');
+                newItem.className = 'item-pedido';
+                newItem.innerHTML = `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Produto *</label>
+                            <select class="produto-select" name="item_${itemCount}_productid" required>
+                                <option value="">Selecione um produto...</option>
+                                {% for produto in produtos %}
+                                <option value="{{ produto[0] }}" 
+                                        data-preco="{{ produto[2] }}"
+                                        data-nome="{{ produto[1] }}">
+                                    {{ produto[1] }} (R$ {{ "%.2f"|format(produto[2]) }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Preço Unitário *</label>
+                            <input type="number" step="0.01" class="unitprice" name="item_${itemCount}_unitprice" readonly required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantidade *</label>
+                            <input type="number" class="quantity" name="item_${itemCount}_quantity" min="1" value="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Desconto</label>
+                            <input type="number" step="0.01" class="discount" name="item_${itemCount}_discount" min="0" max="1" value="0.0">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(newItem);
+                setupProductSelect(newItem.querySelector('.produto-select'));
+                itemCount++;
+            });
+            
+            // Form validation
+            document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Validate at least one item has product selected
+                const productSelects = document.querySelectorAll('.produto-select');
+                let hasProduct = false;
+                
+                productSelects.forEach(select => {
+                    if (select.value) hasProduct = true;
+                });
+                
+                if (!hasProduct) {
+                    alert('Adicione pelo menos um item ao pedido');
+                    isValid = false;
+                }
+                
+                if (!isValid) e.preventDefault();
+            });
         });
     </script>
 </body>

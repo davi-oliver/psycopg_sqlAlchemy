@@ -1,109 +1,135 @@
 import psycopg2
 from psycopg2 import sql
+from typing import Dict, List, Optional, Tuple
 
 class PedidoDAO:
     def __init__(self, conexao):
         self.con = conexao
+        
 
-        
-    
-    # Versão INSEGURA (para demonstração)
-    def inserir_pedido_inseguro(self, customer_name, employee_name, order_data, order_items):
+    def inserir_pedido(self, form_data: dict) -> int:
         cursor = self.con.cursor()
-        cursor.execute("SELECT MAX(orderid) + 1 FROM northwind.orders")
-        order_id = cursor.fetchone()[0]
-        query = f"""
-        INSERT INTO northwind.orders (orderid, customerid, employeeid, orderdate, requireddate, shipname)
-        VALUES (
-            {order_id},
-            (SELECT customerid FROM northwind.customers WHERE contactname = '{customer_name}'),
-            (SELECT employeeid FROM northwind.employees WHERE firstname = '{employee_name}'),
-            '{order_data['orderdate']}',
-            '{order_data['requireddate']}',
-            '{order_data['shipname']}'
-        ) RETURNING orderid;
-        """
-        
-        cursor.execute(query)
-        order_id = cursor.fetchone()[0]
-        print(f"Pedido inserido com ID: {order_id}")
-        for item in order_items:
-            query_item = f"""
-            INSERT INTO northwind.order_details (orderid, productid, unitprice, quantity, discount)
-            VALUES (
-                {order_id}, {item['productid']}, {item['unitprice']}, {item['quantity']}, {item['discount']}
-            );
-            """
-            cursor.execute(query_item)
-        
-        self.con.commit()
-        cursor.close()
-        return order_id
-
-    # Versão SEGURA
-    def inserir_pedido_seguro(self, customer_name, employee_name, order_data, order_items):
-        cursor = self.con.cursor()
-        
         try:
-            # Obter IDs de forma segura
-            cursor.execute(
-                "SELECT customerid FROM northwind.customers WHERE contactname = %s",
-                (customer_name,)
-            )
-            customer_id = cursor.fetchone()[0]
-            print(f"ID do cliente: {customer_id}")
+            cursor.execute("SELECT MAX(orderid) FROM northwind.orders")
+            max_orderid = cursor.fetchone()[0]
+            orderid = (max_orderid or 0) + 1  # Incrementar o maior valor encontrado
+
+            # Inserir pedido principal
+            query = sql.SQL("""
+                INSERT INTO northwind.orders (
+                    orderid, customerid, employeeid, orderdate, requireddate,
+                    shippeddate, freight, shipname, shipaddress,
+                    shipcity, shipregion, shippostalcode, shipcountry, shipperid
+                ) VALUES (
+                   %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s
+                ) RETURNING orderid
+            """)
             
-            cursor.execute(
-                "SELECT employeeid FROM northwind.employees WHERE firstname = %s",
-                (employee_name,)
-            )
-            employee_id = cursor.fetchone()[0]
-            print(f"ID do cliente: {customer_id}, ID do funcionário: {employee_id}")
+            shipped_date = form_data.get('shippeddate')
+            freight = form_data.get('freight')
+            shipper_id = form_data.get('shipperid')
             
-            cursor.execute("SELECT MAX(orderid) + 1 FROM northwind.orders")
+            params = (
+                orderid,
+                form_data['customerid'],
+                form_data['employeeid'],
+                form_data['orderdate'],
+                form_data['requireddate'],
+                shipped_date,
+                float(freight) if freight else None,
+                form_data['shipname'],
+                form_data['shipaddress'], 
+
+                form_data['shipcity'],
+                form_data.get('shipregion'),
+                form_data['shippostalcode'],
+                form_data['shipcountry'],
+                int(shipper_id) if shipper_id else None
+            )
+            print("Params: >>>> ", params)
+            
+            cursor.execute(query, params)
             order_id = cursor.fetchone()[0]
-            # Inserir pedido
-            cursor.execute(
-                """
-                INSERT INTO northwind.orders 
-                    (orderid, customerid, employeeid, orderdate, requireddate, shipname)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING orderid
-                """,
-                (order_id, customer_id, employee_id, 
-                 order_data['orderdate'], 
-                 order_data['requireddate'], 
-                 order_data['shipname'])
-            )
-            order_id_aux = cursor.fetchone()[0]
-            print(f"Pedido inserido com ID: {order_id_aux}")
             
-            # Inserir itens
-            for item in order_items:
-                cursor.execute(
-                    """
-                    INSERT INTO northwind.order_details
-                        (orderid, productid, unitprice, quantity, discount)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (order_id_aux, item['productid'], item['unitprice'], 
-                     item['quantity'], item['discount'])
+            # Inserir itens do pedido
+            i = 0
+            while f'item_{i}_productid' in form_data:
+                item_query = sql.SQL("""
+                    INSERT INTO northwind.order_details (
+                        orderid, productid, unitprice, quantity, discount
+                    ) VALUES (%s, %s, %s, %s, %s)
+                """)
+                
+                item_params = (
+                    order_id,
+                    int(form_data[f'item_{i}_productid']),
+                    float(form_data[f'item_{i}_unitprice']),
+                    int(form_data[f'item_{i}_quantity']),
+                    float(form_data.get(f'item_{i}_discount', 0.0))
                 )
+                
+                cursor.execute(item_query, item_params)
+                i += 1
             
             self.con.commit()
-                        # Verificação imediata
-          
-            cursor.execute("SELECT 1 FROM northwind.orders WHERE orderid = %s", (order_id,))
-            if not cursor.fetchone():
-                raise Exception("Pedido não persistido após commit!")
-            
-            # return True, f"Pedido {order_id} criado com sucesso!", order_id
-
             return order_id
             
         except Exception as e:
-            print(f"Erro ao inserir pedido: {e}")
             self.con.rollback()
             raise e
         finally:
             cursor.close()
+
+    def get_all_clientes(self) -> List[tuple]:
+        cursor = self.con.cursor()
+        try:
+            cursor.execute("""
+                SELECT customerid, contactname 
+                FROM northwind.customers 
+                ORDER BY contactname
+            """)
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
+    def get_all_vendedores(self) -> List[tuple]:
+        cursor = self.con.cursor()
+        try:
+            cursor.execute("""
+                SELECT employeeid, CONCAT(firstname, ' ', lastname) AS nome_completo 
+                FROM northwind.employees 
+                ORDER BY firstname
+            """)
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
+    def get_all_produtos(self) -> List[tuple]:
+        cursor = self.con.cursor()
+        try:
+            cursor.execute("""
+                SELECT productid, productname, unitprice 
+                FROM northwind.products 
+                
+                ORDER BY productname
+            """)
+            # print("Produtos: >>>> ", cursor.fetchall()) 
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
+    def get_all_shippers(self) -> List[tuple]:
+        cursor = self.con.cursor()
+        try:
+            cursor.execute("""
+                SELECT shipperid, companyname 
+                FROM northwind.shippers 
+                ORDER BY companyname
+            """)
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+            
+     

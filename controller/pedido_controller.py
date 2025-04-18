@@ -1,46 +1,44 @@
+from typing import Tuple, Optional, List
 from model.dao.pedidodao import PedidoDAO
+from controller.orm_controller import ORMPedidoController
+from config.database import get_db as get_sqlalchemy_db
 
 class PedidoController:
-    def __init__(self, conexao_db):
-        self.dao = PedidoDAO(conexao_db)
-        
+    def __init__(self, conexao=None, usar_orm=False):
+        self.usar_orm = usar_orm
+        if usar_orm:
+            self.orm_controller = ORMPedidoController(next(get_sqlalchemy_db()))
+        else:
+            self.dao = PedidoDAO(conexao)
     
-    def criar_pedido(self, form_data, seguro=True):
+    def criar_pedido(self, form_data: dict) -> Tuple[bool, str, Optional[int]]:
         try:
-            # Preparar dados do formulário
-            dados = {
-                'customer_name': form_data['customer_name'],
-                'employee_name': form_data['employee_name'],
-                'order_data': {
-                    'orderdate': form_data['orderdate'],
-                    'requireddate': form_data['requireddate'],
-                    'shipname': form_data['shipname']
-                },
-                'order_items': self._parse_items(form_data)
-            }
-            
-            if seguro:
-                order_id = self.dao.inserir_pedido_seguro(**dados)
+            if self.usar_orm:
+                return self.orm_controller.criar_pedido(form_data)
             else:
-                order_id = self.dao.inserir_pedido_inseguro(**dados)
-                
-            return True, f"Pedido {order_id} criado com sucesso!", order_id
+                order_id = self.dao.inserir_pedido(form_data)
+                return True, f"Pedido {order_id} criado com sucesso via Psycopg2", order_id
         except Exception as e:
-            return False, f"Erro: {str(e)}", None
+            return False, f"Erro ao criar pedido: {str(e)}", None
     
-    def _parse_items(self, form_data):
-        items = []
-        # Assumindo que os itens vêm como item_0_productid, item_0_quantity, etc.
-        i = 0
-        while True:
-            productid = form_data.get(f'item_{i}_productid')
-            if not productid:
-                break
-            items.append({
-                'productid': int(productid),
-                'unitprice': float(form_data[f'item_{i}_unitprice']),
-                'quantity': int(form_data[f'item_{i}_quantity']),
-                'discount': float(form_data[f'item_{i}_discount'])
-            })
-            i += 1
-        return items
+    def get_all_clientes(self) -> List[tuple]:
+        if self.usar_orm:
+            return self.orm_controller.get_all_clientes()
+        return self.dao.get_all_clientes()
+    
+    def get_all_vendedores(self) -> List[tuple]:
+        if self.usar_orm:
+            return self.orm_controller.get_all_vendedores()
+        return self.dao.get_all_vendedores()
+    
+    def get_all_produtos(self) -> List[tuple]:
+        if self.usar_orm:
+            return self.orm_controller.get_all_produtos()
+        prod = self.dao.get_all_produtos()
+        print(f"Produtos encontrados>>> ({len(prod)}): {prod[:3]}...")
+        return  prod
+    
+    def get_all_shippers(self) -> List[tuple]:
+        if self.usar_orm:
+            return self.orm_controller.get_all_shippers()
+        return self.dao.get_all_shippers()
